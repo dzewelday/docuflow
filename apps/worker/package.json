@@ -1,5 +1,5 @@
 {
-  "name": "@docuflow/api",
+  "name": "@docuflow/worker",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -7,23 +7,21 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsup",
     "start": "node dist/index.js",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev --name init"
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@docuflow/shared": "^0.0.0",
-    "@hono/node-server": "^1.19.11",
     "@prisma/adapter-pg": "^7.4.2",
     "@prisma/client": "^7.4.2",
     "dotenv": "^16.6.1",
-    "hono": "^4.12.5",
+    "pdf-parse": "^1.1.1",
     "pg": "^8.20.0",
+    "tesseract.js": "^6.0.1",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/node": "^25.4.0",
-    "prisma": "^7.4.2",
+    "@types/pdf-parse": "^1.1.5",
     "tsup": "^8.5.1",
     "tsx": "^4.21.0"
   }

@@ -59,7 +59,7 @@ function handleDrop(event: DragEvent) {
       ref="inputRef"
       class="hidden"
       type="file"
-      accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.txt"
+      accept=".pdf,.png,.jpg,.jpeg,.txt"
       @change="handleFiles(($event.target as HTMLInputElement).files)"
     >
 
@@ -79,7 +79,7 @@ function handleDrop(event: DragEvent) {
       <div class="rounded-[1.5rem] border border-ink/10 bg-sand/80 p-4 text-sm text-ink/75">
         <div class="flex items-center gap-3">
           <FileText class="h-5 w-5 text-ember" />
-          <span>PDF, images, Word docs, or plain text</span>
+          <span>PDF, PNG, JPEG, or plain text</span>
         </div>
       </div>
     </div>

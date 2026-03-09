@@ -7,8 +7,9 @@
     "shared"
   ],
   "scripts": {
-    "dev": "concurrently -n api,web -c blue,green \"npm:dev:api\" \"npm:dev:web\"",
+    "dev": "concurrently -n api,worker,web -c blue,yellow,green \"npm:dev:api\" \"npm:dev:worker\" \"npm:dev:web\"",
     "dev:api": "npm run dev -w @docuflow/api",
+    "dev:worker": "npm run dev -w @docuflow/worker",
     "dev:web": "npm run dev -w @docuflow/web",
     "build": "npm run build --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",

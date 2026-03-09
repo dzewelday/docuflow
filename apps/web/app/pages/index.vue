@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Activity, RefreshCw, Server, Sparkles, TriangleAlert, Upload } from 'lucide-vue-next'
-import { computed, onMounted, ref } from 'vue'
+import { Activity, FileSearch, RefreshCw, Server, Sparkles, TriangleAlert, Upload, Waves } from 'lucide-vue-next'
+import { computed, onMounted, ref, watch } from 'vue'
 
-import type { HelloResponse, UploadResponse } from '@docuflow/shared'
+import type { DocumentStatus, HelloResponse } from '@docuflow/shared'
 
 definePageMeta({
   layout: 'default',
@@ -13,14 +13,34 @@ useHead({
 })
 
 const config = useRuntimeConfig()
+const {
+  activeDocument,
+  loadDocument,
+  loadRecentDocuments,
+  recentDocuments,
+  startUpload,
+  upsertSummary,
+  uploadError,
+  uploadPhase,
+  uploadProgress,
+} = useDocumentUpload()
+const { connect, connectionState, disconnect } = useDocumentEvents({
+  async onEvent(event) {
+    if (event.type === 'heartbeat') {
+      return
+    }
+
+    upsertSummary(event.document)
+
+    if (!activeDocument.value || activeDocument.value.id === event.document.id || event.document.status === 'COMPLETED' || event.document.status === 'FAILED') {
+      await loadDocument(event.document.id)
+    }
+  },
+})
 
 const health = ref<HelloResponse | null>(null)
 const healthError = ref<string | null>(null)
 const healthStatus = ref<'idle' | 'pending' | 'success' | 'error'>('idle')
-
-const isUploading = ref(false)
-const uploadError = ref<string | null>(null)
-const uploadedDocument = ref<UploadResponse['document'] | null>(null)
 
 const connectionTone = computed(() => {
   if (healthStatus.value === 'pending') {
@@ -35,6 +55,49 @@ const connectionTone = computed(() => {
 })
 
 const apiHost = computed(() => config.public.apiBase.replace(/^https?:\/\//, ''))
+const streamTone = computed(() => {
+  if (connectionState.value === 'open') {
+    return 'border-emerald-200 bg-emerald-50 text-emerald-700'
+  }
+
+  if (connectionState.value === 'error') {
+    return 'border-red-200 bg-red-50 text-red-700'
+  }
+
+  if (connectionState.value === 'connecting') {
+    return 'border-sage/50 bg-sage/30 text-ink'
+  }
+
+  return 'border-ink/10 bg-sand/70 text-ink/70'
+})
+const formattedExtractedData = computed<string | null>(() => {
+  const extractedData = activeDocument.value?.extractedData as unknown
+  return extractedData ? JSON.stringify(extractedData, null, 2) : null
+})
+const uploadPhaseLabel = computed(() => {
+  switch (uploadPhase.value) {
+    case 'initiating':
+      return 'Creating signed upload target'
+    case 'uploading':
+      return `Uploading file (${uploadProgress.value}%)`
+    case 'completing':
+      return 'Finalizing upload'
+    default:
+      return 'Ready for the next document'
+  }
+})
+const currentStageIndex = computed(() => {
+  const status = activeDocument.value?.status
+  const order: DocumentStatus[] = ['PENDING_UPLOAD', 'UPLOADED', 'PROCESSING', 'COMPLETED']
+  const index = status ? order.indexOf(status) : -1
+  return index === -1 && status === 'FAILED' ? 2 : index
+})
+const stageSteps = [
+  { label: 'Initiated', status: 'PENDING_UPLOAD' },
+  { label: 'Stored', status: 'UPLOADED' },
+  { label: 'Processing', status: 'PROCESSING' },
+  { label: 'Completed', status: 'COMPLETED' },
+] as const
 
 async function refreshHealth() {
   healthStatus.value = 'pending'
@@ -52,30 +115,29 @@ async function refreshHealth() {
 }
 
 async function handleFileSelected(file: File) {
-  isUploading.value = true
-  uploadError.value = null
-
-  try {
-    const formData = new FormData()
-    formData.append('file', file)
-
-    const response = await $fetch<UploadResponse>('/upload', {
-      baseURL: config.public.apiBase,
-      method: 'POST',
-      body: formData,
-    })
-
-    uploadedDocument.value = response.document
-  } catch (error) {
-    uploadError.value = error instanceof Error ? error.message : 'Upload failed.'
-  } finally {
-    isUploading.value = false
+  const document = await startUpload(file)
+  if (document) {
+    await loadDocument(document.id)
   }
 }
 
 onMounted(() => {
   void refreshHealth()
+  void loadRecentDocuments()
 })
+
+watch(
+  () => activeDocument.value?.id,
+  (documentId) => {
+    if (documentId) {
+      connect(documentId)
+      return
+    }
+
+    disconnect()
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
@@ -96,7 +158,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <UploadDropzone :disabled="isUploading" @select="handleFileSelected" />
+      <UploadDropzone :disabled="uploadPhase !== 'idle'" @select="handleFileSelected" />
 
       <div class="grid gap-4 md:grid-cols-2">
         <article class="rounded-[2rem] border border-white/60 bg-white/80 p-6 shadow-panel">
@@ -134,27 +196,58 @@ onMounted(() => {
         <article class="rounded-[2rem] border border-white/60 bg-ink p-6 text-white shadow-panel">
           <div class="flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.2em] text-white/55">
             <Activity class="h-4 w-4" />
-            Latest Upload
+            Active Document
           </div>
           <div class="mt-5 space-y-3">
-            <template v-if="uploadedDocument">
-              <p class="text-xl font-semibold">{{ uploadedDocument.filename }}</p>
-              <p class="text-sm text-white/70">Status: {{ uploadedDocument.status }}</p>
+            <template v-if="activeDocument">
+              <p class="text-xl font-semibold">{{ activeDocument.filename }}</p>
+              <p class="text-sm text-white/70">Status: {{ activeDocument.status }}</p>
               <p class="text-sm text-white/70">
-                Created {{ new Date(uploadedDocument.createdAt).toLocaleString() }}
+                Created {{ new Date(activeDocument.createdAt).toLocaleString() }}
               </p>
             </template>
-            <template v-else-if="isUploading">
-              <p class="text-xl font-semibold">Uploading…</p>
-              <p class="text-sm text-white/70">The API is persisting a placeholder document record.</p>
+            <template v-else-if="uploadPhase !== 'idle'">
+              <p class="text-xl font-semibold">Pipeline starting…</p>
+              <p class="text-sm text-white/70">The API is issuing a signed upload target and waiting for the file.</p>
             </template>
             <template v-else>
               <p class="text-xl font-semibold">No uploads yet</p>
-              <p class="text-sm text-white/70">Drop a file to create the first `Document` row.</p>
+              <p class="text-sm text-white/70">Drop a file to create the first pipeline job.</p>
             </template>
           </div>
         </article>
       </div>
+
+      <article class="rounded-[2rem] border border-white/60 bg-white/80 p-6 shadow-panel">
+        <div class="flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.2em] text-ink/55">
+          <Waves class="h-4 w-4" />
+          Pipeline Progress
+        </div>
+        <div class="mt-5 grid gap-4 lg:grid-cols-[1.4fr_0.6fr]">
+          <div class="grid gap-3 md:grid-cols-4">
+            <div
+              v-for="(step, index) in stageSteps"
+              :key="step.status"
+              class="rounded-[1.5rem] border px-4 py-4 transition"
+              :class="{
+                'border-emerald-200 bg-emerald-50 text-emerald-700': index <= currentStageIndex && activeDocument?.status !== 'FAILED',
+                'border-red-200 bg-red-50 text-red-700': activeDocument?.status === 'FAILED' && index === 2,
+                'border-ink/10 bg-sand/70 text-ink/60': index > currentStageIndex || !activeDocument,
+              }"
+            >
+              <p class="text-xs uppercase tracking-[0.2em]">{{ step.label }}</p>
+              <p class="mt-2 text-sm font-medium">{{ step.status }}</p>
+            </div>
+          </div>
+          <div class="rounded-[1.5rem] border border-ink/10 bg-sand/70 px-4 py-4 text-sm text-ink/72">
+            <p class="font-semibold text-ink">Upload Transport</p>
+            <p class="mt-2">{{ uploadPhaseLabel }}</p>
+            <div class="mt-4 h-2 overflow-hidden rounded-full bg-white">
+              <div class="h-full rounded-full bg-ink transition-all" :style="{ width: `${uploadProgress}%` }" />
+            </div>
+          </div>
+        </div>
+      </article>
     </section>
 
     <aside class="space-y-4">
@@ -165,7 +258,7 @@ onMounted(() => {
         </div>
         <div class="mt-4 space-y-4 text-sm text-ink/72">
           <p>
-            The backend expects a multipart field named <code class="rounded bg-ink/5 px-1.5 py-0.5 text-xs">file</code> and responds with a typed document payload.
+            The browser now follows a staged flow: initiate upload, send the file to a signed local target, mark the upload complete, then wait for processing updates over SSE.
           </p>
           <p v-if="uploadError" class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-red-700">
             <span class="inline-flex items-center gap-2 font-medium">
@@ -174,18 +267,61 @@ onMounted(() => {
             </span>
           </p>
           <p v-else class="rounded-2xl border border-ink/10 bg-sand/70 px-4 py-3">
-            Documents begin in <strong>PENDING</strong> while extraction is still out of scope for this bootstrap.
+            The worker promotes documents from <strong>PENDING_UPLOAD</strong> through <strong>PROCESSING</strong> to either <strong>COMPLETED</strong> or <strong>FAILED</strong>.
           </p>
         </div>
       </article>
 
       <article class="rounded-[2rem] border border-white/60 bg-white/80 p-6 shadow-panel">
-        <h3 class="text-sm font-semibold uppercase tracking-[0.2em] text-ink/55">Shared Contract</h3>
-        <ul class="mt-4 space-y-3 text-sm text-ink/72">
-          <li>Shared Zod schemas live in <code class="rounded bg-ink/5 px-1.5 py-0.5 text-xs">@docuflow/shared</code>.</li>
-          <li>The dashboard and API both consume the same upload and health response types.</li>
-          <li>Prisma stores the canonical document state in PostgreSQL.</li>
-        </ul>
+        <div class="flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.2em] text-ink/55">
+          <FileSearch class="h-4 w-4" />
+          Recent Documents
+        </div>
+        <div class="mt-4 space-y-3">
+          <button
+            v-for="document in recentDocuments"
+            :key="document.id"
+            class="w-full rounded-[1.5rem] border px-4 py-3 text-left transition"
+            :class="{
+              'border-ink bg-ink text-white': activeDocument?.id === document.id,
+              'border-ink/10 bg-sand/70 text-ink hover:border-ink/30': activeDocument?.id !== document.id,
+            }"
+            type="button"
+            @click="loadDocument(document.id)"
+          >
+            <p class="font-semibold">{{ document.filename }}</p>
+            <p class="mt-1 text-sm opacity-75">{{ document.status }}</p>
+          </button>
+          <p v-if="recentDocuments.length === 0" class="rounded-2xl border border-ink/10 bg-sand/70 px-4 py-3 text-sm text-ink/72">
+            Uploaded documents will appear here and can be reopened after refresh.
+          </p>
+        </div>
+      </article>
+
+      <article class="rounded-[2rem] border border-white/60 bg-white/80 p-6 shadow-panel">
+        <div class="flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.2em] text-ink/55">
+          <Server class="h-4 w-4" />
+          Live Stream
+        </div>
+        <div class="mt-4 rounded-[1.5rem] border px-4 py-3 text-sm" :class="streamTone">
+          <template v-if="activeDocument">
+            SSE state: {{ connectionState }}
+          </template>
+          <template v-else>
+            Select or upload a document to open a status stream.
+          </template>
+        </div>
+      </article>
+
+      <article v-if="activeDocument" class="rounded-[2rem] border border-white/60 bg-white/80 p-6 shadow-panel">
+        <h3 class="text-sm font-semibold uppercase tracking-[0.2em] text-ink/55">Extracted Output</h3>
+        <div class="mt-4 space-y-4 text-sm text-ink/72">
+          <div class="rounded-2xl border border-ink/10 bg-sand/70 px-4 py-3">
+            <p class="font-semibold text-ink">Text Preview</p>
+            <p class="mt-2 whitespace-pre-wrap break-words">{{ activeDocument.extractedText || 'No extracted text yet.' }}</p>
+          </div>
+          <pre v-if="formattedExtractedData" class="overflow-x-auto rounded-2xl border border-ink/10 bg-ink p-4 text-xs text-white">{{ formattedExtractedData }}</pre>
+        </div>
       </article>
     </aside>
   </div>
