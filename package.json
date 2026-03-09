@@ -1,0 +1,25 @@
+{
+  "name": "docuflow",
+  "version": "0.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "shared"
+  ],
+  "scripts": {
+    "dev": "concurrently -n api,web -c blue,green \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "npm run dev -w @docuflow/api",
+    "dev:web": "npm run dev -w @docuflow/web",
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "prisma:generate": "npm run prisma:generate -w @docuflow/api",
+    "prisma:migrate": "npm run prisma:migrate -w @docuflow/api"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "typescript": "^5.9.3"
+  }
+}

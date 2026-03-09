@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  body {
+    @apply min-h-screen bg-sand text-ink antialiased;
+    background-image:
+      radial-gradient(circle at top left, rgba(182, 200, 180, 0.45), transparent 32%),
+      radial-gradient(circle at top right, rgba(249, 115, 22, 0.18), transparent 22%),
+      linear-gradient(180deg, #fbf7ee 0%, #f3ecdd 100%);
+    font-family: "Avenir Next", "Segoe UI", sans-serif;
+  }
+}
