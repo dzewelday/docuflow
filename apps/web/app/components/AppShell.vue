@@ -1,3 +1,10 @@
+<script setup lang="ts">
+const { isDark, toggleThemeMode } = useThemeMode()
+
+const themeLabel = computed(() => (isDark.value ? 'Dark mode' : 'Light mode'))
+const themeIcon = computed(() => (isDark.value ? 'pi pi-moon' : 'pi pi-sun'))
+</script>
+
 <template>
   <div class="app-shell">
     <div class="shell-noise pointer-events-none absolute inset-0 opacity-70" />
@@ -21,7 +28,13 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
-          <Tag severity="contrast" rounded value="System dark mode" class="!px-4 !py-2 !font-semibold" />
+          <Button
+            :label="themeLabel"
+            :icon="themeIcon"
+            severity="secondary"
+            outlined
+            @click="toggleThemeMode()"
+          />
           <Button as="a" href="#upload-panel" label="Start upload" icon="pi pi-arrow-up-right" />
         </div>
       </header>

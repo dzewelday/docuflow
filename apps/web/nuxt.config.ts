@@ -14,7 +14,7 @@ export default defineNuxtConfig({
       theme: {
         preset: docuFlowPreset,
         options: {
-          darkModeSelector: 'system',
+          darkModeSelector: '.dark',
           cssLayer: {
             name: 'primevue',
             order: 'base, primevue, components, utilities',

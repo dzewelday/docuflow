@@ -19,6 +19,15 @@
     font-family: 'Manrope', sans-serif;
   }
 
+  .dark body {
+    @apply bg-night text-white;
+    background-image:
+      radial-gradient(circle at top left, rgba(245, 158, 11, 0.16), transparent 24%),
+      radial-gradient(circle at 85% 10%, rgba(56, 189, 248, 0.08), transparent 24%),
+      radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.04), transparent 34%),
+      linear-gradient(180deg, #08090d 0%, #0f1116 48%, #16181f 100%);
+  }
+
   ::selection {
     @apply bg-primary-200 text-ink;
   }
@@ -72,6 +81,12 @@
     background-position: center;
     background-size: 3.75rem 3.75rem;
     mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.85), transparent 92%);
+  }
+
+  .dark .shell-noise {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
   }
 
   .glass-panel {
@@ -153,5 +168,9 @@
 
   .doc-scrollpanel .p-scrollpanel-bar {
     @apply bg-primary/40;
+  }
+
+  .dark .glass-panel-dark {
+    background: linear-gradient(180deg, rgba(11, 12, 16, 0.94) 0%, rgba(14, 16, 21, 0.88) 100%);
   }
 }
