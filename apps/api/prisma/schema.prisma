@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
 }
 
 enum DocumentStatus {
@@ -20,21 +20,21 @@ enum StorageProvider {
 }
 
 model Document {
-  id                String          @id @default(uuid())
-  filename          String
-  status            DocumentStatus  @default(PENDING_UPLOAD)
-  storageProvider   StorageProvider @default(LOCAL)
-  storageKey        String
-  mimeType          String
-  sizeBytes         Int
-  uploadedAt        DateTime?
+  id                  String          @id @default(uuid())
+  filename            String
+  status              DocumentStatus  @default(PENDING_UPLOAD)
+  storageProvider     StorageProvider @default(LOCAL)
+  storageKey          String
+  mimeType            String
+  sizeBytes           Int
+  uploadedAt          DateTime?
   processingStartedAt DateTime?
-  completedAt       DateTime?
-  errorMessage      String?
-  extractedText     String?
-  extractedData     Json?
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+  completedAt         DateTime?
+  errorMessage        String?
+  extractedText       String?
+  extractedData       Json?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
 
   @@index([status, createdAt])
 }

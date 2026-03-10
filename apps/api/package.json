@@ -9,16 +9,15 @@
     "start": "node dist/index.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev --name init"
+    "prisma:migrate": "RUST_LOG=trace prisma migrate dev --name init"
   },
   "dependencies": {
     "@docuflow/shared": "^0.0.0",
     "@hono/node-server": "^1.19.11",
-    "@prisma/adapter-pg": "^7.4.2",
+    "@prisma/adapter-better-sqlite3": "^7.4.2",
     "@prisma/client": "^7.4.2",
     "dotenv": "^16.6.1",
     "hono": "^4.12.5",
-    "pg": "^8.20.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {

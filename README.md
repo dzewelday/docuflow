@@ -13,9 +13,10 @@ DocuFlow is an automated document intelligence pipeline bootstrapped as an npm-w
 
 1. Copy `.env.example` to `.env` and update `DATABASE_URL` if needed.
 2. Install dependencies with `npm install`.
-3. Generate the Prisma client with `npm run prisma:generate`.
-4. Apply the Prisma migration once PostgreSQL is running with `npm run prisma:migrate`.
-5. Start the apps with `npm run dev`.
+3. Ensure the parent directory for your SQLite file exists, for example `mkdir -p /tmp/docuflow`.
+4. Apply the Prisma migration with `npm run prisma:migrate`.
+5. Generate the Prisma client with `npm run prisma:generate`.
+6. Start the apps with `npm run dev`.
 
 The Nuxt app runs on `http://localhost:3000`, the Hono API runs on `http://localhost:3001`, and the worker runs as a separate background process.
 
@@ -29,7 +30,7 @@ The Nuxt app runs on `http://localhost:3000`, the Hono API runs on `http://local
 
 ## Required Environment
 
-- `DATABASE_URL`: PostgreSQL connection string for Prisma
+- `DATABASE_URL`: absolute SQLite file URL for Prisma, for example `file:/tmp/docuflow/docuflow.db`
 - `API_BASE_URL`: public API origin used when generating signed local upload targets
 - `NUXT_PUBLIC_API_BASE`: frontend API base URL
 - `LOCAL_STORAGE_DIR`: local file storage root for uploaded files
@@ -37,3 +38,5 @@ The Nuxt app runs on `http://localhost:3000`, the Hono API runs on `http://local
 - `ALLOWED_UPLOAD_MIME_TYPES`: comma-separated MIME allowlist
 - `UPLOAD_SIGNING_SECRET`: HMAC secret for local signed upload URLs
 - `INTERNAL_EVENT_TOKEN`: shared token the worker uses to publish SSE events through the API
+
+The API and worker must point at the same SQLite file and are intended to run on the same machine or a shared filesystem. This configuration supports a single worker process.

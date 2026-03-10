@@ -5,7 +5,12 @@ import { z } from 'zod'
 loadEnv({ path: fileURLToPath(new URL('../../../../.env', import.meta.url)) })
 
 const EnvSchema = z.object({
-  databaseUrl: z.string().min(1),
+  databaseUrl: z
+    .string()
+    .min(1)
+    .refine((value) => value.startsWith('file:/'), {
+      message: 'DATABASE_URL must be an absolute SQLite file URL like file:/tmp/docuflow/docuflow.db.',
+    }),
   apiBaseUrl: z.string().url(),
   internalEventToken: z.string().min(8),
   localStorageDir: z.string().min(1),

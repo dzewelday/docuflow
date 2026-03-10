@@ -1,5 +1,5 @@
 import { config as loadEnv } from 'dotenv'
-import { PrismaPg } from '@prisma/adapter-pg'
+import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
 import { PrismaClient } from '@prisma/client'
 import { fileURLToPath } from 'node:url'
 
@@ -11,7 +11,12 @@ if (!connectionString) {
   throw new Error('DATABASE_URL is not configured.')
 }
 
-const adapter = new PrismaPg({ connectionString })
+if (!connectionString.startsWith('file:/')) {
+  throw new Error('DATABASE_URL must be an absolute SQLite file URL like file:/tmp/docuflow/docuflow.db.')
+}
+
+const databasePath = fileURLToPath(new URL(connectionString))
+const adapter = new PrismaBetterSqlite3({ url: databasePath })
 
 const globalForPrisma = globalThis as typeof globalThis & {
   prisma?: PrismaClient

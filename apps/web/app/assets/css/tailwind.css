@@ -1,18 +1,157 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Syne:wght@500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    color-scheme: light;
+    color-scheme: light dark;
   }
 
   body {
     @apply min-h-screen bg-sand text-ink antialiased;
     background-image:
-      radial-gradient(circle at top left, rgba(182, 200, 180, 0.45), transparent 32%),
-      radial-gradient(circle at top right, rgba(249, 115, 22, 0.18), transparent 22%),
-      linear-gradient(180deg, #fbf7ee 0%, #f3ecdd 100%);
-    font-family: "Avenir Next", "Segoe UI", sans-serif;
+      radial-gradient(circle at top left, rgba(255, 214, 126, 0.34), transparent 28%),
+      radial-gradient(circle at 88% 10%, rgba(255, 255, 255, 0.9), transparent 24%),
+      radial-gradient(circle at 50% 100%, rgba(148, 163, 184, 0.16), transparent 34%),
+      linear-gradient(180deg, #fffaf3 0%, #f3ecdf 52%, #efe3d4 100%);
+    font-family: 'Manrope', sans-serif;
+  }
+
+  ::selection {
+    @apply bg-primary-200 text-ink;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: 'Syne', sans-serif;
+  }
+}
+
+@layer components {
+  .app-shell {
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  .app-shell::before,
+  .app-shell::after {
+    content: '';
+    position: absolute;
+    inset: auto;
+    border-radius: 9999px;
+    filter: blur(32px);
+    opacity: 0.8;
+    pointer-events: none;
+  }
+
+  .app-shell::before {
+    top: -7rem;
+    right: -3rem;
+    height: 20rem;
+    width: 20rem;
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.32), transparent 70%);
+  }
+
+  .app-shell::after {
+    bottom: -9rem;
+    left: -4rem;
+    height: 18rem;
+    width: 18rem;
+    background: radial-gradient(circle, rgba(148, 163, 184, 0.26), transparent 70%);
+  }
+
+  .shell-noise {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.38) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.38) 1px, transparent 1px);
+    background-position: center;
+    background-size: 3.75rem 3.75rem;
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.85), transparent 92%);
+  }
+
+  .glass-panel {
+    @apply border border-white/50 bg-white/70 shadow-panel backdrop-blur-2xl dark:border-white/10 dark:bg-white/5;
+  }
+
+  .glass-panel-strong {
+    @apply border border-white/60 bg-white/80 shadow-panel backdrop-blur-2xl dark:border-white/10 dark:bg-white/10;
+  }
+
+  .glass-panel-dark {
+    @apply border border-white/10 bg-night text-white shadow-panel backdrop-blur-2xl;
+  }
+
+  .eyebrow {
+    @apply text-[0.68rem] font-extrabold uppercase tracking-[0.28em] text-muted-color;
+  }
+
+  .hero-title {
+    @apply font-display text-5xl font-semibold leading-[0.92] text-ink sm:text-6xl lg:text-7xl dark:text-white;
+  }
+
+  .section-title {
+    @apply font-display text-2xl font-semibold tracking-[-0.03em] text-ink dark:text-white;
+  }
+
+  .metric-orb {
+    @apply flex h-12 w-12 items-center justify-center rounded-2xl border border-white/60 bg-white/60 text-xl text-brass shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] dark:border-white/10 dark:bg-white/10 dark:text-primary;
+  }
+
+  .prime-glass-card .p-card {
+    @apply border-0 bg-transparent shadow-none;
+  }
+
+  .prime-glass-card .p-card-body {
+    @apply gap-0 p-0;
+  }
+
+  .prime-glass-card .p-card-content {
+    @apply p-0;
+  }
+
+  .doc-tabs .p-tablist-tab-list {
+    @apply gap-2 rounded-full bg-white/60 p-1 dark:bg-white/5;
+  }
+
+  .doc-tabs .p-tab {
+    @apply rounded-full;
+  }
+
+  .doc-tabs .p-tab-active {
+    @apply bg-white shadow-sm dark:bg-white/10;
+  }
+
+  .doc-tabs .p-tabpanels {
+    @apply bg-transparent p-0 pt-6;
+  }
+
+  .doc-listbox .p-listbox {
+    @apply border-0 bg-transparent shadow-none;
+  }
+
+  .doc-listbox .p-listbox-list-container {
+    @apply max-h-[26rem];
+  }
+
+  .doc-fileupload .p-fileupload {
+    @apply border-0 bg-transparent shadow-none;
+  }
+
+  .doc-fileupload .p-fileupload-header,
+  .doc-fileupload .p-fileupload-content {
+    @apply border-0 bg-transparent p-0;
+  }
+
+  .doc-scrollpanel .p-scrollpanel-wrapper {
+    @apply rounded-[1.4rem];
+  }
+
+  .doc-scrollpanel .p-scrollpanel-bar {
+    @apply bg-primary/40;
   }
 }

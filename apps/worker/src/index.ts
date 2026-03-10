@@ -13,32 +13,37 @@ function sleep(ms: number) {
 }
 
 async function claimNextDocument() {
-  const rows = await prisma.$queryRaw<Array<{ id: string }>>(Prisma.sql`
-    WITH next_document AS (
-      SELECT id
-      FROM "Document"
-      WHERE status = 'UPLOADED'
-      ORDER BY "uploadedAt" ASC NULLS LAST, "createdAt" ASC
-      FOR UPDATE SKIP LOCKED
-      LIMIT 1
-    )
-    UPDATE "Document" AS d
-    SET status = 'PROCESSING',
-        "processingStartedAt" = NOW(),
-        "errorMessage" = NULL,
-        "updatedAt" = NOW()
-    FROM next_document
-    WHERE d.id = next_document.id
-    RETURNING d.id
-  `)
+  while (true) {
+    const nextDocument = await prisma.document.findFirst({
+      where: { status: 'UPLOADED' },
+      orderBy: [{ uploadedAt: 'asc' }, { createdAt: 'asc' }],
+    })
 
-  if (rows.length === 0) {
-    return null
+    if (!nextDocument) {
+      return null
+    }
+
+    const claimedAt = new Date()
+    const result = await prisma.document.updateMany({
+      where: {
+        id: nextDocument.id,
+        status: 'UPLOADED',
+      },
+      data: {
+        status: 'PROCESSING',
+        processingStartedAt: claimedAt,
+        errorMessage: null,
+      },
+    })
+
+    if (result.count !== 1) {
+      continue
+    }
+
+    return prisma.document.findUnique({
+      where: { id: nextDocument.id },
+    })
   }
-
-  return prisma.document.findUnique({
-    where: { id: rows[0].id },
-  })
 }
 
 async function emitCurrentState(documentId: string, message: string | null = null) {
