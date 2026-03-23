@@ -9,6 +9,23 @@ const props = defineProps<{
 const emit = defineEmits<{
   select: [documentId: string]
 }>()
+
+function formatStatus(status: DocumentSummary['status']) {
+  switch (status) {
+    case 'PENDING_UPLOAD':
+      return 'Queued'
+    case 'UPLOADED':
+      return 'Uploaded'
+    case 'PROCESSING':
+      return 'Processing'
+    case 'COMPLETED':
+      return 'Ready'
+    case 'FAILED':
+      return 'Failed'
+    default:
+      return status
+  }
+}
 </script>
 
 <template>
@@ -19,13 +36,13 @@ const emit = defineEmits<{
       option-label="filename"
       option-value="id"
       filter
-      filter-placeholder="Filter documents"
-      empty-message="Uploaded documents will appear here."
+      filter-placeholder="Search recent files"
+      empty-message="Recent files show up here."
       class="w-full"
       :pt="{
         root: 'glass-panel rounded-[1.75rem] border-0 p-2',
         header: 'px-2 pb-3 pt-2',
-        pcFilterContainer: { root: 'w-full rounded-full border border-white/60 bg-white/70 dark:border-white/10 dark:bg-white/5' },
+        pcFilterContainer: { root: 'w-full rounded-full border border-black/6 bg-white/70 dark:border-white/10 dark:bg-white/[0.04]' },
         pcFilter: { root: 'w-full rounded-full border-0 bg-transparent px-4 py-3 text-sm text-color shadow-none' },
         listContainer: 'rounded-[1.25rem]',
         option: 'rounded-[1.25rem] border border-transparent px-4 py-4 transition',
@@ -38,7 +55,7 @@ const emit = defineEmits<{
           <div class="min-w-0">
             <p class="truncate font-semibold">{{ option.filename }}</p>
             <p class="mt-1 text-xs uppercase tracking-[0.22em]" :class="selected ? 'text-primary-contrast/70' : 'text-muted-color'">
-              {{ option.status }}
+              {{ formatStatus(option.status) }}
             </p>
             <p class="mt-3 text-xs" :class="selected ? 'text-primary-contrast/70' : 'text-muted-color'">
               {{ new Date(option.createdAt).toLocaleString() }}

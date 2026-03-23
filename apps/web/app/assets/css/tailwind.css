@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Syne:wght@500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,25 +7,33 @@
 @layer base {
   :root {
     color-scheme: light dark;
+    --page-background:
+      radial-gradient(circle at top left, rgba(217, 119, 6, 0.12), transparent 30%),
+      radial-gradient(circle at 85% 8%, rgba(255, 255, 255, 0.9), transparent 24%),
+      linear-gradient(180deg, #fbf7f2 0%, #f5efe7 52%, #ede6db 100%);
+    --panel-bg: rgba(255, 255, 255, 0.74);
+    --panel-strong-bg: rgba(255, 255, 255, 0.86);
+    --panel-border: rgba(28, 25, 23, 0.07);
+    --panel-shadow: 0 28px 90px rgba(88, 61, 18, 0.08);
+    --panel-dark-bg: linear-gradient(180deg, rgba(18, 19, 24, 0.96) 0%, rgba(22, 24, 30, 0.92) 100%);
   }
 
   body {
     @apply min-h-screen bg-sand text-ink antialiased;
-    background-image:
-      radial-gradient(circle at top left, rgba(255, 214, 126, 0.34), transparent 28%),
-      radial-gradient(circle at 88% 10%, rgba(255, 255, 255, 0.9), transparent 24%),
-      radial-gradient(circle at 50% 100%, rgba(148, 163, 184, 0.16), transparent 34%),
-      linear-gradient(180deg, #fffaf3 0%, #f3ecdf 52%, #efe3d4 100%);
+    background-image: var(--page-background);
     font-family: 'Manrope', sans-serif;
   }
 
   .dark body {
     @apply bg-night text-white;
-    background-image:
-      radial-gradient(circle at top left, rgba(245, 158, 11, 0.16), transparent 24%),
-      radial-gradient(circle at 85% 10%, rgba(56, 189, 248, 0.08), transparent 24%),
-      radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.04), transparent 34%),
-      linear-gradient(180deg, #08090d 0%, #0f1116 48%, #16181f 100%);
+    --page-background:
+      radial-gradient(circle at top left, rgba(245, 158, 11, 0.12), transparent 28%),
+      radial-gradient(circle at 84% 10%, rgba(148, 163, 184, 0.08), transparent 24%),
+      linear-gradient(180deg, #0b0c0f 0%, #111318 52%, #171a20 100%);
+    --panel-bg: rgba(255, 255, 255, 0.04);
+    --panel-strong-bg: rgba(255, 255, 255, 0.07);
+    --panel-border: rgba(255, 255, 255, 0.1);
+    --panel-shadow: 0 28px 90px rgba(0, 0, 0, 0.28);
   }
 
   ::selection {
@@ -36,7 +44,7 @@
   h2,
   h3,
   h4 {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Instrument Serif', serif;
   }
 }
 
@@ -59,50 +67,60 @@
   }
 
   .app-shell::before {
-    top: -7rem;
-    right: -3rem;
-    height: 20rem;
-    width: 20rem;
-    background: radial-gradient(circle, rgba(245, 158, 11, 0.32), transparent 70%);
+    top: -6rem;
+    right: -4rem;
+    height: 18rem;
+    width: 18rem;
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.22), transparent 72%);
   }
 
   .app-shell::after {
-    bottom: -9rem;
+    bottom: -8rem;
     left: -4rem;
-    height: 18rem;
-    width: 18rem;
-    background: radial-gradient(circle, rgba(148, 163, 184, 0.26), transparent 70%);
+    height: 16rem;
+    width: 16rem;
+    background: radial-gradient(circle, rgba(148, 163, 184, 0.16), transparent 72%);
   }
 
   .shell-noise {
     background-image:
-      linear-gradient(rgba(255, 255, 255, 0.38) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.38) 1px, transparent 1px);
+      linear-gradient(rgba(255, 255, 255, 0.22) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.22) 1px, transparent 1px);
     background-position: center;
-    background-size: 3.75rem 3.75rem;
+    background-size: 4.75rem 4.75rem;
     mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.85), transparent 92%);
   }
 
   .dark .shell-noise {
     background-image:
-      linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+      linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
   }
 
   .glass-panel {
-    @apply border border-white/50 bg-white/70 shadow-panel backdrop-blur-2xl dark:border-white/10 dark:bg-white/5;
+    border: 1px solid var(--panel-border);
+    background: var(--panel-bg);
+    box-shadow: var(--panel-shadow);
+    backdrop-filter: blur(28px);
   }
 
   .glass-panel-strong {
-    @apply border border-white/60 bg-white/80 shadow-panel backdrop-blur-2xl dark:border-white/10 dark:bg-white/10;
+    border: 1px solid var(--panel-border);
+    background: var(--panel-strong-bg);
+    box-shadow: var(--panel-shadow);
+    backdrop-filter: blur(28px);
   }
 
   .glass-panel-dark {
-    @apply border border-white/10 bg-night text-white shadow-panel backdrop-blur-2xl;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--panel-dark-bg);
+    color: white;
+    box-shadow: var(--panel-shadow);
+    backdrop-filter: blur(28px);
   }
 
   .eyebrow {
-    @apply text-[0.68rem] font-extrabold uppercase tracking-[0.28em] text-muted-color;
+    @apply text-[0.68rem] font-extrabold uppercase tracking-[0.26em] text-muted-color;
   }
 
   .hero-title {
@@ -110,11 +128,11 @@
   }
 
   .section-title {
-    @apply font-display text-2xl font-semibold tracking-[-0.03em] text-ink dark:text-white;
+    @apply font-display text-2xl font-semibold tracking-[-0.04em] text-ink dark:text-white;
   }
 
   .metric-orb {
-    @apply flex h-12 w-12 items-center justify-center rounded-2xl border border-white/60 bg-white/60 text-xl text-brass shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] dark:border-white/10 dark:bg-white/10 dark:text-primary;
+    @apply flex h-11 w-11 items-center justify-center rounded-2xl border border-black/5 bg-white/80 text-xl text-brass shadow-[0_12px_30px_rgba(201,122,16,0.12)] dark:border-white/10 dark:bg-white/[0.05] dark:text-primary;
   }
 
   .prime-glass-card .p-card {
@@ -130,7 +148,7 @@
   }
 
   .doc-tabs .p-tablist-tab-list {
-    @apply gap-2 rounded-full bg-white/60 p-1 dark:bg-white/5;
+    @apply gap-2 rounded-full border border-black/5 bg-white/68 p-1 dark:border-white/10 dark:bg-white/[0.04];
   }
 
   .doc-tabs .p-tab {
@@ -138,7 +156,7 @@
   }
 
   .doc-tabs .p-tab-active {
-    @apply bg-white shadow-sm dark:bg-white/10;
+    @apply bg-white shadow-sm dark:bg-white/[0.08];
   }
 
   .doc-tabs .p-tabpanels {
@@ -171,6 +189,6 @@
   }
 
   .dark .glass-panel-dark {
-    background: linear-gradient(180deg, rgba(11, 12, 16, 0.94) 0%, rgba(14, 16, 21, 0.88) 100%);
+    background: var(--panel-dark-bg);
   }
 }

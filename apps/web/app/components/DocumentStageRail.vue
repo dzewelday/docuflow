@@ -8,10 +8,10 @@ const props = defineProps<{
 }>()
 
 const stages = [
-  { label: 'Initiated', status: 'PENDING_UPLOAD', caption: 'Signed target created' },
-  { label: 'Stored', status: 'UPLOADED', caption: 'Blob committed' },
-  { label: 'Processing', status: 'PROCESSING', caption: 'Worker extraction live' },
-  { label: 'Completed', status: 'COMPLETED', caption: 'Structured output ready' },
+  { label: 'Queued', status: 'PENDING_UPLOAD', caption: 'File received' },
+  { label: 'Saved', status: 'UPLOADED', caption: 'Stored successfully' },
+  { label: 'Reading', status: 'PROCESSING', caption: 'Working through content' },
+  { label: 'Ready', status: 'COMPLETED', caption: 'Result available' },
 ] as const satisfies Array<{ label: string; status: DocumentStatus; caption: string }>
 
 const currentStageIndex = computed(() => {
@@ -40,7 +40,7 @@ function connectorTone(index: number) {
   }
 
   if (index < currentStageIndex.value) {
-  return 'bg-primary/60'
+    return 'bg-primary/60'
   }
 
   return 'bg-white/60 dark:bg-white/10'
@@ -50,6 +50,17 @@ function connectorTone(index: number) {
 <template>
   <div class="grid gap-6 xl:grid-cols-[1.5fr_0.72fr]">
     <div class="glass-panel rounded-[1.75rem] p-5 sm:p-6">
+      <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <p class="eyebrow">Progress</p>
+          <p class="mt-2 font-display text-2xl font-semibold tracking-[-0.04em] text-color">Track the current file</p>
+        </div>
+        <StatusTag
+          :label="props.currentStatus === 'FAILED' ? 'Stopped' : props.currentStatus === 'COMPLETED' ? 'Ready' : props.currentStatus ? 'In progress' : 'Waiting'"
+          :tone="props.currentStatus === 'FAILED' ? 'danger' : props.currentStatus === 'COMPLETED' ? 'success' : props.currentStatus ? 'info' : 'neutral'"
+        />
+      </div>
+
       <Timeline
         :value="stages"
         align="top"
@@ -77,9 +88,11 @@ function connectorTone(index: number) {
         <template #content="{ item, index }">
           <div class="space-y-2 pr-4">
             <p class="eyebrow">{{ item.label }}</p>
-            <p class="text-sm font-semibold text-color">{{ item.status }}</p>
+            <p class="text-sm font-semibold text-color">
+              {{ props.currentStatus === item.status ? 'Current step' : index < currentStageIndex ? 'Done' : 'Up next' }}
+            </p>
             <p class="text-xs leading-5 text-muted-color">
-              {{ props.currentStatus === 'FAILED' && index === 2 ? 'Pipeline stopped before completion' : item.caption }}
+              {{ props.currentStatus === 'FAILED' && index === 2 ? 'Stopped before the result was ready.' : item.caption }}
             </p>
           </div>
         </template>
@@ -89,8 +102,8 @@ function connectorTone(index: number) {
     <div class="glass-panel-dark rounded-[1.75rem] p-6">
       <div class="flex items-center justify-between gap-4">
         <div>
-          <p class="eyebrow !text-white/50">Upload transport</p>
-          <p class="mt-2 font-display text-2xl font-semibold text-white">Live transfer</p>
+          <p class="eyebrow !text-white/50">Transfer</p>
+          <p class="mt-2 font-display text-2xl font-semibold text-white">Upload status</p>
         </div>
         <i class="pi pi-wave-pulse text-2xl text-primary" />
       </div>
@@ -106,7 +119,7 @@ function connectorTone(index: number) {
         }"
       />
       <div class="mt-4 flex items-center justify-between text-xs uppercase tracking-[0.24em] text-white/50">
-        <span>Payload</span>
+        <span>Current file</span>
         <span>{{ props.uploadProgress }}%</span>
       </div>
     </div>

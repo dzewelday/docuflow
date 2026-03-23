@@ -12,10 +12,10 @@ const activeTab = ref<'text' | 'json'>('text')
   <div class="glass-panel rounded-[1.75rem] p-6">
     <div class="flex flex-wrap items-center justify-between gap-4">
       <div>
-        <p class="eyebrow">Extracted output</p>
-        <p class="mt-2 font-display text-3xl font-semibold tracking-[-0.03em] text-color">Readable text and normalized JSON</p>
+        <p class="eyebrow">Result</p>
+        <p class="mt-2 font-display text-3xl font-semibold tracking-[-0.04em] text-color">Review the extracted content</p>
       </div>
-      <StatusTag :label="props.formattedExtractedData ? 'Structured result ready' : 'Waiting on worker output'" :tone="props.formattedExtractedData ? 'success' : 'neutral'" />
+      <StatusTag :label="props.formattedExtractedData ? 'Ready' : 'Waiting'" :tone="props.formattedExtractedData ? 'success' : 'neutral'" />
     </div>
 
     <Message
@@ -29,8 +29,8 @@ const activeTab = ref<'text' | 'json'>('text')
 
     <Tabs v-model:value="activeTab" class="doc-tabs mt-6">
       <TabList :pt="{ activeBar: 'hidden' }">
-        <Tab value="text">Text Preview</Tab>
-        <Tab value="json">JSON Payload</Tab>
+        <Tab value="text">Text</Tab>
+        <Tab value="json">Structured</Tab>
       </TabList>
 
       <TabPanels :pt="{ root: 'mt-1' }">
@@ -39,7 +39,7 @@ const activeTab = ref<'text' | 'json'>('text')
             <div class="rounded-[1.4rem] bg-night p-5 text-sm leading-7 text-white">
               <p v-if="props.extractedText" class="whitespace-pre-wrap break-words">{{ props.extractedText }}</p>
               <Message v-else severity="secondary" :closable="false">
-                No extracted text yet.
+                No text yet.
               </Message>
             </div>
           </ScrollPanel>
@@ -50,7 +50,7 @@ const activeTab = ref<'text' | 'json'>('text')
             <div class="rounded-[1.4rem] bg-night p-5">
               <pre v-if="props.formattedExtractedData" class="overflow-x-auto text-xs leading-6 text-white">{{ props.formattedExtractedData }}</pre>
               <Message v-else severity="secondary" :closable="false">
-                No normalized JSON yet.
+                No structured data yet.
               </Message>
             </div>
           </ScrollPanel>

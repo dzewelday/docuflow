@@ -9,11 +9,12 @@ definePageMeta({
 })
 
 useHead({
-  title: 'DocuFlow Command Center',
+  title: 'DocuFlow',
 })
 
 const config = useRuntimeConfig()
 const toast = useToast()
+
 const {
   activeDocument,
   loadDocument,
@@ -25,6 +26,7 @@ const {
   uploadPhase,
   uploadProgress,
 } = useDocumentUpload()
+
 const { connect, connectionState, disconnect } = useDocumentEvents({
   async onEvent(event) {
     if (event.type === 'heartbeat') {
@@ -39,26 +41,25 @@ const { connect, connectionState, disconnect } = useDocumentEvents({
   },
 })
 
-const health = ref<HelloResponse | null>(null)
 const healthError = ref<string | null>(null)
 const healthStatus = ref<'idle' | 'pending' | 'success' | 'error'>('idle')
 const lastToastStatusKey = ref<string | null>(null)
 
-const apiHost = computed(() => config.public.apiBase.replace(/^https?:\/\//, ''))
 const formattedExtractedData = computed<string | null>(() => {
   const extractedData = activeDocument.value?.extractedData as unknown
   return extractedData ? JSON.stringify(extractedData, null, 2) : null
 })
+
 const uploadPhaseLabel = computed(() => {
   switch (uploadPhase.value) {
     case 'initiating':
-      return 'Creating signed upload target'
+      return 'Preparing upload'
     case 'uploading':
-      return `Uploading file (${uploadProgress.value}%)`
+      return `Uploading (${uploadProgress.value}%)`
     case 'completing':
-      return 'Finalizing upload'
+      return 'Finishing'
     default:
-      return 'Ready for the next document'
+      return 'Ready'
   }
 })
 
@@ -94,6 +95,35 @@ const healthMessageSeverity = computed(() => {
   return 'secondary'
 })
 
+const healthLabel = computed(() => {
+  switch (healthStatus.value) {
+    case 'pending':
+      return 'Checking'
+    case 'success':
+      return 'Ready'
+    case 'error':
+      return 'Unavailable'
+    default:
+      return 'Idle'
+  }
+})
+
+const healthMessage = computed(() => {
+  if (healthStatus.value === 'pending') {
+    return 'Checking service availability.'
+  }
+
+  if (healthError.value) {
+    return healthError.value
+  }
+
+  if (healthStatus.value === 'success') {
+    return 'Everything is available.'
+  }
+
+  return 'Service status has not been checked yet.'
+})
+
 const streamTone = computed(() => {
   if (connectionState.value === 'error') {
     return 'danger'
@@ -126,6 +156,39 @@ const streamMessageSeverity = computed(() => {
   return 'secondary'
 })
 
+const connectionLabel = computed(() => {
+  switch (connectionState.value) {
+    case 'open':
+      return 'Live'
+    case 'connecting':
+      return 'Connecting'
+    case 'error':
+      return 'Interrupted'
+    default:
+      return 'Standby'
+  }
+})
+
+const connectionMessage = computed(() => {
+  if (!activeDocument.value) {
+    return 'Select a file to follow its updates.'
+  }
+
+  if (connectionState.value === 'open') {
+    return 'Status updates are following the selected file.'
+  }
+
+  if (connectionState.value === 'connecting') {
+    return 'Connecting to the selected file.'
+  }
+
+  if (connectionState.value === 'error') {
+    return 'Updates paused. Try selecting the file again.'
+  }
+
+  return 'Waiting for the selected file.'
+})
+
 const activeDocumentTone = computed(() => {
   if (activeDocument.value?.status === 'FAILED') {
     return 'danger'
@@ -146,6 +209,32 @@ const activeDocumentTone = computed(() => {
   return 'neutral'
 })
 
+const activeDocumentLabel = computed(() => {
+  switch (activeDocument.value?.status) {
+    case 'PENDING_UPLOAD':
+      return 'Queued'
+    case 'UPLOADED':
+      return 'Uploaded'
+    case 'PROCESSING':
+      return 'Processing'
+    case 'COMPLETED':
+      return 'Ready'
+    case 'FAILED':
+      return 'Failed'
+    default:
+      return uploadPhase.value !== 'idle' ? 'Starting' : 'Waiting'
+  }
+})
+
+const activeDocumentTime = computed(() => (
+  activeDocument.value
+    ? new Date(activeDocument.value.createdAt).toLocaleString([], {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    })
+    : null
+))
+
 const recentDocumentsCount = computed(() => recentDocuments.value.length)
 
 async function refreshHealth() {
@@ -153,7 +242,7 @@ async function refreshHealth() {
   healthError.value = null
 
   try {
-    health.value = await $fetch<HelloResponse>('/health', {
+    await $fetch<HelloResponse>('/health', {
       baseURL: config.public.apiBase,
     })
     healthStatus.value = 'success'
@@ -176,16 +265,16 @@ async function handleFileSelected(file: File) {
   if (document) {
     toast.add({
       severity: 'success',
-      summary: 'Upload queued',
-      detail: `${document.filename} is now ${document.status}.`,
+      summary: 'Upload complete',
+      detail: `${document.filename} is ready to review.`,
       life: 2800,
     })
   }
 }
 
 onMounted(() => {
-  void refreshHealth()
-  void loadRecentDocuments()
+  refreshHealth()
+  loadRecentDocuments()
 })
 
 watch(
@@ -227,7 +316,7 @@ watch(
     if (activeDocument.value?.status === 'COMPLETED') {
       toast.add({
         severity: 'success',
-        summary: 'Extraction completed',
+        summary: 'Result ready',
         detail: activeDocument.value.filename,
         life: 3200,
       })
@@ -236,7 +325,7 @@ watch(
     if (activeDocument.value?.status === 'FAILED') {
       toast.add({
         severity: 'warn',
-        summary: 'Pipeline failed',
+        summary: 'Processing stopped',
         detail: activeDocument.value.errorMessage ?? activeDocument.value.filename,
         life: 4200,
       })
@@ -247,30 +336,21 @@ watch(
 
 <template>
   <div class="space-y-8">
-    <section class="grid gap-6 xl:grid-cols-[1.28fr_0.72fr]">
-      <div class="space-y-6">
-        <SectionHeader
-          eyebrow="Automated intake"
-          title="Turn raw uploads into a live, inspectable document pipeline."
-          body="Nuxt, Hono, Prisma, and shared Zod contracts still power the workflow. PrimeVue now gives the surface a clearer hierarchy, stronger states, and a more deliberate command center feel."
-          icon="pi pi-sparkles"
-        />
+    <section class="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_22rem]">
+      <UploadPanel
+        :key="`${activeDocument?.id ?? 'empty'}-${uploadPhase}-${uploadError ?? 'ok'}`"
+        :disabled="uploadPhase !== 'idle'"
+        :upload-phase-label="uploadPhaseLabel"
+        :upload-progress="uploadProgress"
+        :upload-error="uploadError"
+        @select="handleFileSelected"
+      />
 
-        <UploadPanel
-          :key="`${activeDocument?.id ?? 'empty'}-${uploadPhase}-${uploadError ?? 'ok'}`"
-          :disabled="uploadPhase !== 'idle'"
-          :upload-phase-label="uploadPhaseLabel"
-          :upload-progress="uploadProgress"
-          :upload-error="uploadError"
-          @select="handleFileSelected"
-        />
-      </div>
-
-      <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-1">
-        <StatCard eyebrow="API link" title="Direct browser health" icon="pi pi-server">
+      <div class="grid gap-4 sm:grid-cols-3 xl:grid-cols-1">
+        <StatCard eyebrow="Service" title="Availability" icon="pi pi-server">
           <template #actions>
             <Button
-              label="Refresh"
+              label="Check"
               icon="pi pi-refresh"
               severity="secondary"
               outlined
@@ -280,43 +360,31 @@ watch(
           </template>
 
           <div class="space-y-4">
-            <div class="flex flex-wrap items-center gap-3">
-              <StatusTag :label="healthStatus === 'success' ? 'Connected' : healthStatus === 'pending' ? 'Checking' : healthStatus === 'error' ? 'Unavailable' : 'Idle'" :tone="healthTone" />
-              <span class="text-sm font-semibold text-color">{{ apiHost }}</span>
+            <div class="flex items-center gap-3">
+              <StatusTag :label="healthLabel" :tone="healthTone" />
             </div>
             <Message :severity="healthMessageSeverity" :closable="false">
-              <template v-if="healthStatus === 'pending'">
-                Checking direct browser connection to the API...
-              </template>
-              <template v-else-if="healthError">
-                {{ healthError }}
-              </template>
-              <template v-else>
-                {{ health?.message ?? 'No response received yet.' }}
-              </template>
+              {{ healthMessage }}
             </Message>
           </div>
         </StatCard>
 
-        <StatCard eyebrow="Active document" title="Pipeline focus" icon="pi pi-wave-pulse" variant="dark">
+        <StatCard eyebrow="Current file" title="In focus" icon="pi pi-wave-pulse" variant="dark">
           <div class="space-y-4">
             <div class="flex flex-wrap items-center gap-3">
-              <StatusTag
-                :label="activeDocument?.status ?? (uploadPhase !== 'idle' ? 'STARTING' : 'EMPTY')"
-                :tone="activeDocumentTone"
-              />
-              <span v-if="activeDocument" class="text-xs uppercase tracking-[0.24em] text-white/50">
-                {{ new Date(activeDocument.createdAt).toLocaleString() }}
+              <StatusTag :label="activeDocumentLabel" :tone="activeDocumentTone" />
+              <span v-if="activeDocumentTime" class="text-xs uppercase tracking-[0.24em] text-white/50">
+                {{ activeDocumentTime }}
               </span>
             </div>
 
             <template v-if="activeDocument">
-              <p class="font-display text-3xl font-semibold tracking-[-0.03em] text-white">
+              <p class="font-display text-3xl font-semibold tracking-[-0.04em] text-white">
                 {{ activeDocument.filename }}
               </p>
               <div class="grid gap-3 sm:grid-cols-2">
                 <div class="rounded-[1.2rem] bg-white/5 p-4">
-                  <p class="text-xs uppercase tracking-[0.22em] text-white/50">Type</p>
+                  <p class="text-xs uppercase tracking-[0.22em] text-white/50">Format</p>
                   <p class="mt-2 text-sm font-semibold text-white/80">{{ activeDocument.mimeType }}</p>
                 </div>
                 <div class="rounded-[1.2rem] bg-white/5 p-4">
@@ -334,56 +402,45 @@ watch(
             </template>
 
             <Message v-else severity="secondary" :closable="false">
-              No active upload yet. Start with a single document to open the live event stream.
+              Start with one file and it will appear here.
             </Message>
           </div>
         </StatCard>
 
-        <StatCard eyebrow="Live stream" title="SSE activity channel" icon="pi pi-bolt">
+        <StatCard eyebrow="Updates" title="Live status" icon="pi pi-bolt">
           <div class="space-y-4">
-            <div class="flex flex-wrap items-center gap-3">
-              <StatusTag :label="connectionState.toUpperCase()" :tone="streamTone" />
-              <span class="text-sm text-muted-color">
-                {{ activeDocument ? 'Bound to the selected document.' : 'Waiting for a selected document.' }}
-              </span>
+            <div class="flex items-center gap-3">
+              <StatusTag :label="connectionLabel" :tone="streamTone" />
+              <span class="truncate text-sm text-muted-color">{{ activeDocument ? activeDocument.filename : 'No file selected' }}</span>
             </div>
             <Message :severity="streamMessageSeverity" :closable="false">
-              <template v-if="activeDocument">
-                SSE state: {{ connectionState }}
-              </template>
-              <template v-else>
-                Select or upload a document to open the status stream.
-              </template>
+              {{ connectionMessage }}
             </Message>
           </div>
         </StatCard>
       </div>
     </section>
 
-    <section class="space-y-5">
-      <SectionHeader
-        eyebrow="Pipeline progress"
-        title="Every stage stays visible from signed target to structured output."
-        body="The browser handles the upload transport while worker events move the document through storage, processing, and completion."
-        icon="pi pi-sitemap"
-      />
-      <DocumentStageRail
-        :current-status="activeDocument?.status"
-        :upload-phase-label="uploadPhaseLabel"
-        :upload-progress="uploadProgress"
-      />
-    </section>
+    <DocumentStageRail
+      :current-status="activeDocument?.status"
+      :upload-phase-label="uploadPhaseLabel"
+      :upload-progress="uploadProgress"
+    />
 
-    <section class="grid gap-6 xl:grid-cols-[0.78fr_1.22fr]">
-      <div class="space-y-5">
+    <section class="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_20rem]">
+      <ExtractedOutputViewer
+        :extracted-text="activeDocument?.extractedText"
+        :formatted-extracted-data="formattedExtractedData"
+        :error-message="activeDocument?.errorMessage"
+      />
+
+      <div class="space-y-4">
         <div class="flex items-end justify-between gap-4">
-          <SectionHeader
-            eyebrow="Recent documents"
-            title="Reopen the latest runs instantly."
-            body="The dashboard keeps the newest summaries hot so you can bounce between uploads without refreshing context."
-            icon="pi pi-folder-open"
-          />
-          <StatusTag :label="`${recentDocumentsCount} loaded`" tone="accent" />
+          <div>
+            <p class="eyebrow">Recent</p>
+            <h2 class="section-title mt-2">Open a recent file</h2>
+          </div>
+          <StatusTag :label="`${recentDocumentsCount}`" tone="accent" />
         </div>
 
         <RecentDocumentsList
@@ -392,12 +449,6 @@ watch(
           @select="loadDocument"
         />
       </div>
-
-      <ExtractedOutputViewer
-        :extracted-text="activeDocument?.extractedText"
-        :formatted-extracted-data="formattedExtractedData"
-        :error-message="activeDocument?.errorMessage"
-      />
     </section>
   </div>
 </template>

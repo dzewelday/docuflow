@@ -8,7 +8,7 @@ export default <Partial<Config>>{
     extend: {
       fontFamily: {
         sans: ['Manrope', 'sans-serif'],
-        display: ['Syne', 'sans-serif'],
+        display: ['Instrument Serif', 'serif'],
       },
       colors: {
         ink: '#1d1918',
