@@ -40,3 +40,17 @@ The Nuxt app runs on `http://localhost:3000`, the Hono API runs on `http://local
 - `INTERNAL_EVENT_TOKEN`: shared token the worker uses to publish SSE events through the API
 
 The API and worker must point at the same SQLite file and are intended to run on the same machine or a shared filesystem. This configuration supports a single worker process.
+
+Chase Sapphire Preferred® Card
+Chase Freedom Flex®
+Amazon Prime Store Card by Synchrony
+American Express® Gold Card
+Apple Card
+Discover it® Cash Back
+Capital One Quicksilver Cash Rewards Credit Card
+
+
+- Design and develop full-stack web applications using Java (Spring Boot) and Vue.js with TypeScript, including leading the modernization of a legacy Visual Basic desktop system into a cloud-native web platform with RESTful APIs
+- Build and maintain scalable backend services and APIs integrating with enterprise data platforms including SQL Server, MarkLogic, Elasticsearch, and Snowflake, leveraging Redis caching to improve application performance and response times
+- Contribute to system architecture, API design, and technical decision-making while collaborating with engineers, product teams, and stakeholders to deliver reliable production systems
+- Work in a trunk-based development environment with pair programming, automated testing, and CI/CD pipelines using GitHub Actions and Concourse, deploying to VMware Tanzu with a migration toward Kubernetes-based infrastructure

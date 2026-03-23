@@ -31,14 +31,14 @@ export function useDocumentEvents(options: UseDocumentEventsOptions) {
 
     eventSource.onmessage = (event) => {
       const payload = DocumentStatusEventSchema.parse(JSON.parse(event.data))
-      void options.onEvent(payload)
+      options.onEvent(payload)
     }
 
     for (const eventName of ['snapshot', 'status_changed', 'heartbeat']) {
       eventSource.addEventListener(eventName, (event) => {
         const messageEvent = event as MessageEvent<string>
         const payload = DocumentStatusEventSchema.parse(JSON.parse(messageEvent.data))
-        void options.onEvent(payload)
+        options.onEvent(payload)
       })
     }
 

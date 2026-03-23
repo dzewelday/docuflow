@@ -1,4 +1,5 @@
 <script setup lang="ts">
+
 const props = withDefaults(defineProps<{
   label: string
   tone?: 'accent' | 'success' | 'warn' | 'danger' | 'info' | 'neutral' | 'contrast'
